@@ -1,14 +1,11 @@
 package com.retrommo.server.netty.listeners;
 
-import com.retrommo.iocommon.AuthSuccess;
-import com.retrommo.iocommon.LoginInfo;
+import com.retrommo.iocommon.wire.client.LoginInfo;
+import com.retrommo.iocommon.wire.server.AuthSuccess;
 import com.retrommo.server.RetroMmoServer;
-import com.retrommo.server.game.ServerPlayer;
 import com.retrommo.server.netty.ObjectListener;
 import com.retrommo.server.netty.ObjectType;
 import io.netty.channel.ChannelHandlerContext;
-
-import java.util.UUID;
 
 /*********************************************************************************
  *
@@ -29,11 +26,8 @@ public class LoginInfoListener implements ObjectListener {
 
     @ObjectType(getType = LoginInfo.class)
     public void onLogin(LoginInfo loginInfo, ChannelHandlerContext ctx) {
-        System.out.println("[Client Login] Account: " + loginInfo.getAccount() + " IP: " + ctx.channel().remoteAddress());
-        AuthSuccess authSuccess = new AuthSuccess();
-        UUID uuid = UUID.randomUUID();
-        authSuccess.setUuid(uuid);
-
+        String authInfo = "[Client Login] Login {RESULT}! Account: " + loginInfo.getAccount() + " IP: " + ctx.channel().remoteAddress();
+        AuthSuccess authSuccess = new AuthSuccess(false, false); //by default make sure these values are false
         boolean loginSuccess = false, versionSuccess = false;
 
         if (authUser(loginInfo.getAccount(), loginInfo.getPassword()))
@@ -43,19 +37,34 @@ public class LoginInfoListener implements ObjectListener {
 
         // if login success, create serverPlayer object
         if (loginSuccess && versionSuccess) {
-            RetroMmoServer.getInstance().getGameManager().addServerPlayer(new ServerPlayer(ctx.channel(), loginInfo.getAccount(), uuid));
+            System.out.println(authInfo.replace("{RESULT}", "Success"));
+            RetroMmoServer.getClientManager().addClientPlayer(ctx);
+        } else {
+            System.out.println(authInfo.replace("{RESULT}", "Failure"));
         }
 
-        ctx.write(authSuccess);
+        // Send authSuccess information back to the client.
+        // This information contains Version checking and Login authentication success.
+        // If both booleans are true, then client will login. If one or both are false,
+        // then the client will not be allowed to login.
+        ctx.writeAndFlush(authSuccess);
     }
 
-    public boolean authUser(String account, String password) {
+    /**
+     * TODO: Add legit authentication and fix this description.
+     * This will eventually be used to check the users credentials aginst a server database.
+     *
+     * @param account  The players account name.
+     * @param password The players account password.
+     * @return True if a successful account/password match. False otherwise.
+     */
+    private boolean authUser(String account, String password) {
         // do stuff;
         if (account.equalsIgnoreCase("andrew") && password.equals("Brown")) {
             return true;
         } else if (account.equalsIgnoreCase("a") && password.equals("a")) {
             return true;
         }
-        return true;
+        return true; //TODO: Return true for private testing. Return false for LIVE server.
     }
 }

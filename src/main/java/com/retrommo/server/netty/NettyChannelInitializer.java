@@ -6,8 +6,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 
 /*********************************************************************************
  *
@@ -24,16 +22,13 @@ import io.netty.handler.logging.LoggingHandler;
  * including photocopying, recording, or other electronic or mechanical methods,
  * without the prior written permission of the owner.
  */
-public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
-
-    private final LoggingHandler loggingHandler = new LoggingHandler(getClass(), LogLevel.INFO);
+class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     public void initChannel(SocketChannel channel) throws Exception {
         ChannelPipeline pipeline = channel.pipeline();
 
         pipeline.addLast(new ObjectEncoder());
         pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
-        //pipeline.addLast("logger", loggingHandler);
         pipeline.addLast(new ObjectEchoHandler());
     }
 }

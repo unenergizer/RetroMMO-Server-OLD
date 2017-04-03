@@ -19,19 +19,12 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * including photocopying, recording, or other electronic or mechanical methods,
  * without the prior written permission of the owner.
  */
-public class ObjectEchoHandler extends ChannelInboundHandlerAdapter {
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        System.out.println("[Netty] Channel Active");
-    }
+class ObjectEchoHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         // object received. try to parse it
-        RetroMmoServer.getInstance().getListenerManager().runListeners(msg, ctx);
-        // send data back
-        //ctx.write();
+        RetroMmoServer.getInstance().getNetworkListenerManager().runListeners(msg, ctx);
     }
 
     @Override
@@ -42,5 +35,6 @@ public class ObjectEchoHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         System.out.println("[Netty] Channel exception caught!");
+        cause.printStackTrace();
     }
 }

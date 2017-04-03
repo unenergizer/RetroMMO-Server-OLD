@@ -24,13 +24,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 public class NettySetup implements Runnable {
 
+    private final int port = 1337;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private int port;
-
-    public NettySetup(int port) throws Exception {
-        this.port = port;
-    }
 
     /**
      * This will start Netty in a new thread.
@@ -42,10 +38,8 @@ public class NettySetup implements Runnable {
 
     /**
      * This will safely shut Netty down and close all connections.
-     *
-     * @throws InterruptedException
      */
-    public void stop() throws InterruptedException {
+    public void stop() {
         System.out.println("[Netty] Shutting down Netty!");
         workerGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();

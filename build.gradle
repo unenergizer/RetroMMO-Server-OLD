@@ -18,4 +18,5 @@ repositories {
 dependencies {
     compileOnly "org.projectlombok:lombok:1.16.16"
     compile group: 'io.netty', name: 'netty-all', version: '4.1.9.Final'
+    compile "net.onedaybeard.artemis:artemis-odb:2.1.0"
 }
