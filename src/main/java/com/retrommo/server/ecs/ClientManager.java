@@ -8,9 +8,6 @@ import com.retrommo.server.ecs.components.EntityType;
 import com.retrommo.server.ecs.components.Position;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,12 +34,24 @@ public class ClientManager {
     private final ECS ecs;
     private final World world;
 
-    private Map<Channel, PlayerInfo> channelToPlayerInfo = new HashMap<>();
-    private Map<Integer, PlayerInfo> entityIdToPlayerInfo = new HashMap<>();
+    private final Map<Channel, PlayerInfo> channelToPlayerInfo = new HashMap<>();
+    private final Map<Integer, PlayerInfo> entityIdToPlayerInfo = new HashMap<>();
 
     public ClientManager() {
         ecs = RetroMmoServer.getECS();
         world = ecs.getWorld();
+    }
+
+    /**
+     * This will send Objects to all the players currently logged in.
+     * Generally this really should not be used.
+     *
+     * @param object The object we want to send to the client.
+     */
+    public void writeDataToAllClients(Object object) {
+        for (Channel channel : channelToPlayerInfo.keySet()) {
+            channel.writeAndFlush(object);
+        }
     }
 
     /**
@@ -52,9 +61,10 @@ public class ClientManager {
      * information.  Netty and Artemis-odb (ECS) was not originally
      * meant to work together.  This will make our life's easier.
      *
+     * @param accountName The name of the playerAccount who logged in.
      * @param ctx The channel that the client has connected to.
      */
-    public void addClientPlayer(ChannelHandlerContext ctx) {
+    public void addClientPlayer(String accountName, ChannelHandlerContext ctx) {
         // create entity
         int entityId = world.create();
         Entity entity = world.getEntity(entityId);
@@ -72,7 +82,7 @@ public class ClientManager {
         position.setY(y);
 
         // save entity data to HashMap and List
-        PlayerInfo playerInfo = new PlayerInfo(entityId, ctx.channel());
+        PlayerInfo playerInfo = new PlayerInfo(entityId, ctx.channel(), accountName);
         channelToPlayerInfo.put(ctx.channel(), playerInfo); // Save to HashMap
         entityIdToPlayerInfo.put(entityId, playerInfo); // Save to HashMap
 
@@ -85,7 +95,7 @@ public class ClientManager {
      * @param channel Retrieves the player to remove based on the channel they are connected to.
      */
     public void removeClientPlayer(Channel channel) {
-        removeClientPlayer(channelToPlayerInfo.get(channel).entityID, channel);
+        removeClientPlayer(channelToPlayerInfo.get(channel).getEntityID(), channel);
     }
 
     /**
@@ -129,7 +139,7 @@ public class ClientManager {
     }
 
     /**
-     * This will retrieve a Netty channnel based on the player's entity ID.
+     * This will retrieve a Netty channel based on the player's entity ID.
      *
      * @param entityID The entity ID we will use to grab the players channel.
      * @return A Netty channel used to send and receive data from the client to the server.
@@ -138,12 +148,23 @@ public class ClientManager {
         return entityIdToPlayerInfo.get(entityID).getChannel();
     }
 
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    private class PlayerInfo {
+    /**
+     * Gets basic data about a user.  This does not get data from ECS or Netty.
+     *
+     * @param channel Look up the player data by the Netty channel.
+     * @return Various player data.
+     */
+    public PlayerInfo getClientPlayerInfo(Channel channel) {
+        return channelToPlayerInfo.get(channel);
+    }
 
-        private final int entityID;
-        private final Channel channel;
+    /**
+     * Gets basic data about a user.  This does not get data from ECS or Netty.
+     *
+     * @param entityID Look up the player data by the ECS Entity ID.
+     * @return Various player data.
+     */
+    public PlayerInfo getClientPlayerInfo(int entityID) {
+        return entityIdToPlayerInfo.get(entityID);
     }
 }

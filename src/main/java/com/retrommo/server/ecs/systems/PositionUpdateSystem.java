@@ -1,8 +1,14 @@
 package com.retrommo.server.ecs.systems;
 
 import com.artemis.Aspect;
+import com.artemis.EntitySubscription;
 import com.artemis.systems.IteratingSystem;
+import com.artemis.utils.IntBag;
+import com.retrommo.iocommon.wire.client.EntityMove;
+import com.retrommo.server.RetroMmoServer;
+import com.retrommo.server.ecs.ECS;
 import com.retrommo.server.ecs.components.EntityType;
+import com.retrommo.server.ecs.components.Player;
 import com.retrommo.server.ecs.components.Position;
 
 /*********************************************************************************
@@ -30,41 +36,45 @@ public class PositionUpdateSystem extends IteratingSystem {
     @Override
     protected void process(int entityId) {
 
-//        ECS ecs = RetroMmoServer.getECS();
-//
-//        Position position = ecs.getPositionMapper().get(entityId);
-//        EntityType entityType = ecs.getEntityTypeMapper().get(entityId);
-//
-//        switch (entityType.getEntityType()) {
-//            case PLAYER:
-//
-//                int mapId = position.getMapId();
-//
-//                EntitySubscription subscription = world.getAspectSubscriptionManager()
-//                        .get(Aspect.all(Player.class));
-//
-//                IntBag entityIds = subscription.getEntities();
-//                for (int i = 0; i < entityIds.size(); i++) {
-//
-//                    PlayerData somePlayer = ecs.getPlayerMapper().get(entityId);
-//
-//                    if (!somePlayer.getStates().equals(ClientStates.GAME_READY)) return;
-//
-//                    int theirMap = ecs.getPositionMapper().get(entityId).getMapId();
-//                    // Send out to the player since we are on the same map
-//                    if (theirMap == mapId) {
-//
-//                        EntityMove newPosition = new EntityMove();
-//                        newPosition.setX(position.getX() + 1);
-//                        newPosition.setY(position.getY() + 1);
-//                        newPosition.setEntityId(entityId);
-//                        newPosition.setMapId(mapId);
-//
-//                        somePlayer.getChannel().writeAndFlush(newPosition);
-//                    }
-//                }
-//
-//                break;
-//        }
+        ECS ecs = RetroMmoServer.getECS();
+
+        Position position = ecs.getPositionMapper().get(entityId);
+        EntityType entityType = ecs.getEntityTypeMapper().get(entityId);
+
+        switch (entityType.getEntityType()) {
+            case PLAYER:
+
+                int mapId = position.getMapId();
+                EntitySubscription subscription = world.getAspectSubscriptionManager().get(Aspect.all(Player.class));
+
+                IntBag entityIds = subscription.getEntities();
+                for (int otherEntities = 0; otherEntities < entityIds.size(); otherEntities++) {
+
+                    //Player somePlayer = ecs.getPlayerMapper().get(entityId);
+                    //if (!somePlayer.getStates().equals(ClientStates.GAME_READY)) return;
+
+                    int theirMap = ecs.getPositionMapper().get(entityId).getMapId();
+
+                    // Send out to the player since we are on the same map
+                    if (theirMap == mapId) {
+
+                        EntityMove newPosition = new EntityMove();
+                        newPosition.setX(position.getX());
+                        newPosition.setY(position.getY());
+                        newPosition.setEntityId(entityId);
+                        newPosition.setMapId(mapId);
+
+                        // update the mapper with the new position!
+                        position.setX(position.getX());
+                        position.setY(position.getY());
+
+                        // send update to clients
+                        RetroMmoServer.getClientManager().getClientPlayerChannel(entityId).writeAndFlush(newPosition);
+                        RetroMmoServer.getClientManager().getClientPlayerChannel(otherEntities).writeAndFlush(newPosition);
+                    }
+                }
+
+                break;
+        }
     }
 }

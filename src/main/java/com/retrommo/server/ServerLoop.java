@@ -2,22 +2,6 @@ package com.retrommo.server;
 
 import com.artemis.World;
 
-/*********************************************************************************
- *
- * OWNER: Robert Andrew Brown & Joseph Rugh
- * PROGRAMMER: Robert Andrew Brown & Joseph Rugh
- * PROJECT: retrommo-server
- * DATE: 3/31/2017
- * _______________________________________________________________________________
- *
- * Copyright © 2017 RetroMMO.com. All Rights Reserved.
- *
- * No part of this project and/or code and/or source code and/or source may be 
- * reproduced, distributed, or transmitted in any form or by any means, 
- * including photocopying, recording, or other electronic or mechanical methods, 
- * without the prior written permission of the owner.
- */
-
 /**
  * Class Credit:
  * https://github.com/Wulf/crescent/blob/master/crescent/core/server/ca/live/hk12/crescent/server/CrescentServer.java
@@ -25,7 +9,7 @@ import com.artemis.World;
  * https://github.com/Wulf/crescent/blob/master/LICENSE.txt
  * Modified: Robert Brown & Joseph Rugh
  */
-class ServerLoop extends Thread {
+public class ServerLoop extends Thread {
 
     /* UPDATES PER SECOND */
     private final int TPS = 20;

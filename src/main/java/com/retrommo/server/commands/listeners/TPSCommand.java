@@ -1,17 +1,17 @@
-package com.retrommo.iocommon.wire.server;
+package com.retrommo.server.commands.listeners;
 
-import com.retrommo.iocommon.enums.EntityTypes;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-import java.io.Serializable;
+import com.retrommo.iocommon.wire.global.ChatMessage;
+import com.retrommo.server.RetroMmoServer;
+import com.retrommo.server.commands.Command;
+import com.retrommo.server.commands.CommandListener;
+import io.netty.channel.Channel;
 
 /*********************************************************************************
  *
  * OWNER: Robert Andrew Brown & Joseph Rugh
  * PROGRAMMER: Robert Andrew Brown & Joseph Rugh
  * PROJECT: retrommo-server
- * DATE: 3/31/2017
+ * DATE: 3/29/2017
  * _______________________________________________________________________________
  *
  * Copyright © 2017 RetroMMO.com. All Rights Reserved.
@@ -21,11 +21,13 @@ import java.io.Serializable;
  * including photocopying, recording, or other electronic or mechanical methods, 
  * without the prior written permission of the owner.
  */
-@AllArgsConstructor
-@Getter
-public class SendEntityData implements Serializable {
-    private int serverEntityID;
-    private EntityTypes entityType;
-    private float x, y;
-    private int mapID;
+
+public class TPSCommand implements CommandListener {
+
+    @Command(getCommands = {"/tps"})
+    public void onTPSCmd(Channel playerChannel) {
+        ChatMessage message = new ChatMessage();
+        message.setMessage("TPS: " + RetroMmoServer.getInstance().getLoop().getCurrentTPS() + "\n");
+        playerChannel.writeAndFlush(message);
+    }
 }

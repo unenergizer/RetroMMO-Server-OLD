@@ -75,6 +75,7 @@ public class ECS {
      * @return A IntBag of non-player entities.
      */
     public IntBag getAllNonPlayerEntities() {
+        //noinspection unchecked
         return world.getAspectSubscriptionManager().get(Aspect.all(EntityType.class).exclude(Player.class)).getEntities();
     }
 

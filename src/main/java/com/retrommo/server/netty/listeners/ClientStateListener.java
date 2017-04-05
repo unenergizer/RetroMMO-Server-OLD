@@ -32,8 +32,8 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class ClientStateListener implements ObjectListener {
 
-    private ECS ecs = RetroMmoServer.getECS();
-    private ClientManager clientManager = RetroMmoServer.getClientManager();
+    private final ECS ecs = RetroMmoServer.getECS();
+    private final ClientManager clientManager = RetroMmoServer.getClientManager();
 
     @ObjectType(getType = ClientState.class)
     public void onClientStateReceived(ClientState clientState, ChannelHandlerContext ctx) {
@@ -44,6 +44,7 @@ public class ClientStateListener implements ObjectListener {
 
             case GAME_READY:
                 int newPlayerID = clientManager.getClientPlayerEntityID(channel);
+                sendInitialClientPlayerInfo(newPlayerID, channel);
                 sendPlayerEntities(newPlayerID, channel);
                 sendNonPlayerEntities(newPlayerID, channel);
                 break;
@@ -53,11 +54,71 @@ public class ClientStateListener implements ObjectListener {
     }
 
     /**
+     * This will setup the clients player character.
+     *
+     * @param newPlayerID The server assigned ID.
+     * @param channel The Netty Channel that we will be sending data to.
+     */
+    private void sendInitialClientPlayerInfo(int newPlayerID, Channel channel) {
+        Position newLoginPosition = ecs.getPositionMapper().get(newPlayerID);
+        float newPlayerX = newLoginPosition.getX();
+        float newPlayerY = newLoginPosition.getY();
+        int newPlayerMapId = newLoginPosition.getMapId();
+
+        // create entity location data to send to other player clients.
+        SendEntityData newLoginData = new SendEntityData(newPlayerID, EntityTypes.CLIENT_PLAYER, newPlayerX, newPlayerY, newPlayerMapId);
+        channel.writeAndFlush(newLoginData);
+    }
+
+    /**
+     * This will send a newly logged in player all online player data if they are all on the
+     * same map.
+     *
+     * @param newPlayerID The ECS ID of the player who will be getting entity updates.
+     * @param channel     The Netty Channel that we will be sending data to.
+     */
+    private void sendPlayerEntities(int newPlayerID, Channel channel) {
+        ComponentMapper<EntityType> entityTypes = ecs.getEntityTypeMapper();
+        EntityTypes newLoginType = entityTypes.get(newPlayerID).getEntityType();
+
+        Position newLoginPosition = ecs.getPositionMapper().get(newPlayerID);
+        float newPlayerX = newLoginPosition.getX();
+        float newPlayerY = newLoginPosition.getY();
+        int newPlayerMapId = newLoginPosition.getMapId();
+
+        // create entity location data to send to other player clients.
+        SendEntityData newLoginData = new SendEntityData(newPlayerID, newLoginType, newPlayerX, newPlayerY, newPlayerMapId);
+
+        IntBag entities = ecs.getAllPlayersEntities();
+        for (int entityId = 0; entityId < entities.size(); entityId++) {
+
+            EntityTypes entityType = entityTypes.get(entityId).getEntityType();
+            Position entity = ecs.getPositionMapper().get(entityId);
+            float entityX = entity.getX();
+            float entityY = entity.getY();
+            int entityMapId = entity.getMapId();
+
+            // Only send data to entities on the same Tiled map.
+            if (newPlayerMapId != entityMapId) continue;
+
+            // Prevent sending information about the client, to the client.
+            if (entityId == newPlayerID) continue;
+
+            // Send the newPlayer info about the currently online players.
+            SendEntityData onlinePlayerData = new SendEntityData(entityId, entityType, entityX, entityY, entityMapId);
+            channel.writeAndFlush(onlinePlayerData);
+
+            // Send data about the new Player to all online players.
+            clientManager.getClientPlayerChannel(entityId).writeAndFlush(newLoginData);
+        }
+    }
+
+    /**
      * This will send a new login player all non-entity data if the player
      * and the entities are on the same map.
      *
      * @param newPlayerID The ECS ID of the player who will be getting entity updates.
-     * @param channel The Netty Channel that we will be sending data too.
+     * @param channel     The Netty Channel that we will be sending data to.
      */
     private void sendNonPlayerEntities(int newPlayerID, Channel channel) {
         ComponentMapper<EntityType> entityTypes = ecs.getEntityTypeMapper();
@@ -78,48 +139,7 @@ public class ClientStateListener implements ObjectListener {
             float entityY = entity.getY();
 
             // Finally send the onlineEntityData for this entity to the newly logged in player.
-            channel.writeAndFlush(new SendEntityData(entityId, entityType, entityX, entityY));
-        }
-    }
-
-    /**
-     * This will send a newly logged in player all online player data if they are all on the
-     * same map.
-     *
-     * @param newPlayerID The ECS ID of the player who will be getting entity updates.
-     * @param channel The Netty Channel that we will be sending data too.
-     */
-    private void sendPlayerEntities(int newPlayerID, Channel channel) {
-        ComponentMapper<EntityType> entityTypes = ecs.getEntityTypeMapper();
-        EntityTypes newLoginType = entityTypes.get(newPlayerID).getEntityType();
-
-        Position newLoginPosition = ecs.getPositionMapper().get(newPlayerID);
-        float newPlayerX = newLoginPosition.getX();
-        float newPlayerY = newLoginPosition.getY();
-        int newPlayerMapId = newLoginPosition.getMapId();
-
-        // create entity location data to send to other player clients.
-        SendEntityData newLoginData = new SendEntityData(newPlayerID, newLoginType, newPlayerX, newPlayerY);
-
-        IntBag entities = ecs.getAllPlayersEntities();
-        for (int entityId = 0; entityId < entities.size(); entityId++) {
-
-            EntityTypes entityType = entityTypes.get(entityId).getEntityType();
-            Position entity = ecs.getPositionMapper().get(entityId);
-            float entityX = entity.getX();
-            float entityY = entity.getY();
-            int entityMapId = entity.getMapId();
-
-            // Only send data to entities on the same Tiled map.
-            if (newPlayerMapId != entityMapId) continue;
-
-            // Send the newPlayer info about the currently online players.
-            SendEntityData onlinePlayerData = new SendEntityData(entityId, entityType, entityX, entityY);
-            channel.writeAndFlush(onlinePlayerData);
-
-            // If the two ID's match, prevent from sending information about self to self.
-            if (entityId == newPlayerID) continue;
-            clientManager.getClientPlayerChannel(entityId).writeAndFlush(newLoginData);
+            channel.writeAndFlush(new SendEntityData(entityId, entityType, entityX, entityY, entityMapId));
         }
     }
 }

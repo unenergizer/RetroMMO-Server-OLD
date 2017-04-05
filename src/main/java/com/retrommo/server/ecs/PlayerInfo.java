@@ -1,17 +1,16 @@
-package com.retrommo.iocommon.wire.server;
+package com.retrommo.server.ecs;
 
-import com.retrommo.iocommon.enums.EntityTypes;
+import io.netty.channel.Channel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.io.Serializable;
+import lombok.Setter;
 
 /*********************************************************************************
  *
  * OWNER: Robert Andrew Brown & Joseph Rugh
  * PROGRAMMER: Robert Andrew Brown & Joseph Rugh
  * PROJECT: retrommo-server
- * DATE: 3/31/2017
+ * DATE: 4/2/2017
  * _______________________________________________________________________________
  *
  * Copyright © 2017 RetroMMO.com. All Rights Reserved.
@@ -21,11 +20,13 @@ import java.io.Serializable;
  * including photocopying, recording, or other electronic or mechanical methods, 
  * without the prior written permission of the owner.
  */
-@AllArgsConstructor
+
 @Getter
-public class SendEntityData implements Serializable {
-    private int serverEntityID;
-    private EntityTypes entityType;
-    private float x, y;
-    private int mapID;
+@Setter
+@AllArgsConstructor
+public class PlayerInfo {
+
+    private final int entityID;
+    private final Channel channel;
+    private final String accountName;
 }

@@ -4,6 +4,7 @@ import com.retrommo.server.commands.CommandProcessor;
 import com.retrommo.server.commands.ConsoleCommandManager;
 import com.retrommo.server.commands.listeners.AdminCommand;
 import com.retrommo.server.commands.listeners.OnlineCommand;
+import com.retrommo.server.commands.listeners.TPSCommand;
 import com.retrommo.server.ecs.ClientManager;
 import com.retrommo.server.ecs.ECS;
 import com.retrommo.server.netty.NettySetup;
@@ -146,6 +147,7 @@ public class RetroMmoServer {
 
         commandProcessor.addListener(new AdminCommand());
         commandProcessor.addListener(new OnlineCommand());
+        commandProcessor.addListener(new TPSCommand());
 
         // console command manager
         // TODO: Get commands working for the console!

@@ -23,7 +23,6 @@ class ObjectEchoHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        // object received. try to parse it
         RetroMmoServer.getInstance().getNetworkListenerManager().runListeners(msg, ctx);
     }
 
@@ -33,8 +32,5 @@ class ObjectEchoHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        System.out.println("[Netty] Channel exception caught!");
-        cause.printStackTrace();
-    }
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {cause.printStackTrace();}
 }

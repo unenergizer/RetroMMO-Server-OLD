@@ -38,7 +38,7 @@ public class LoginInfoListener implements ObjectListener {
         // if login success, create serverPlayer object
         if (loginSuccess && versionSuccess) {
             System.out.println(authInfo.replace("{RESULT}", "Success"));
-            RetroMmoServer.getClientManager().addClientPlayer(ctx);
+            RetroMmoServer.getClientManager().addClientPlayer(loginInfo.getAccount(), ctx);
         } else {
             System.out.println(authInfo.replace("{RESULT}", "Failure"));
         }
@@ -52,7 +52,7 @@ public class LoginInfoListener implements ObjectListener {
 
     /**
      * TODO: Add legit authentication and fix this description.
-     * This will eventually be used to check the users credentials aginst a server database.
+     * This will eventually be used to check the users credentials against a server database.
      *
      * @param account  The players account name.
      * @param password The players account password.
