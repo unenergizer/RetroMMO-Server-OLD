@@ -24,10 +24,11 @@ public class LoginInfo implements Serializable {
 
     private final String account;
     private final String password;
-    private final String version = "0.1.0";
+    private final String version;
 
-    public LoginInfo(String account, String password) {
+    public LoginInfo(String account, String password, String version) {
         this.account = account;
         this.password = password;
+        this.version = version;
     }
 }
